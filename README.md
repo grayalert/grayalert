@@ -6,6 +6,21 @@
 
 GrayAlert aims to identify and alert about anomalies in production microservices, ensuring that you're informed about new error types without being overwhelmed by redundant logs. It uses a suffix tree for anomaly detection ([Radix tree](https://en.wikipedia.org/wiki/Radix_tree), [PatriciaTrie](https://commons.apache.org/proper/commons-collections/apidocs/org/apache/commons/collections4/trie/PatriciaTrie.html)), ensuring efficient and accurate detection.
 
+### Typical use-case
+
+Imagine: You've just rolled out the latest version of your microservice into production. It's a moment of triumph, but also one of vigilance. What if new, unexpected errors pop up? NullPointerExceptions, bespoke error messages, or other anomalies - these gremlins can sneak in despite the most rigorous testing.
+
+Enter GrayAlert, your new ally in proactive error monitoring! GrayAlert is specifically designed for these critical moments. It's not just about catching errors - it's about catching them the first time they appear. With GrayAlert, you're not bombarded with every single occurrence of a known issue. Instead, you're alerted only about the new, potentially critical errors that matter.
+
+But here's the best part: GrayAlert integrates seamlessly with your favorite notification tools like Microsoft Teams, (TODO) Slack, and more. This means you get real-time alerts in the platforms you already use and love. No more sifting through endless logs when something goes wrong.
+
+GrayAlert is especially useful when the unexpected happens. If pagerduty rings, GrayAlert's insights into new errors could be the key to swiftly pinpointing the root cause, saving precious time and effort.
+
+This isn't just another error monitoring tool. GrayAlert is about giving you peace of mind. It's about making your post-release monitoring as smooth and stress-free as possible. It's about letting you focus on what you do best - creating amazing software - while it keeps an eye on the background, ensuring everything runs like clockwork. Welcome to a new era of smart, efficient, and proactive error management!
+
+
+
+
 ### Key Features:
 
 - **Anomaly Detection:** New error types are detected based on a combination of the microservice name and logger class name. Messages are compared to a list of known messages, with a unique tokenization strategy to ensure accurate differentiation.
