@@ -1,0 +1,33 @@
+version: '3.1'
+services:
+  db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: grayalert
+      #MYSQL_USER: admin
+      MYSQL_ROOT_HOST: '%'  # needs to be enclosed with quotes
+    ports:
+      - "3306:3306"
+    expose:
+      - 3306
+    volumes:
+      - ./example-db-init.sql:/docker-entrypoint-initdb.d/init.sql
+  grayalert:
+    image: "grayalert:latest"
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: example
+      DB_SCHEMA: grayalert
+      GRAYLOG_BASE_URL: ${GRAYLOG_BASE_URL}
+      GRAYLOG_USER: ${GRAYLOG_USER}
+      GRAYLOG_PASSWORD: ${GRAYLOG_PASSWORD}
+      MS_TEAMS_URL: ${MS_TEAMS_URL}
+    ports:
+      - 8080:8080
+    depends_on:
+      - db

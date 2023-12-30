@@ -1,0 +1,22 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    password: ${DB_PASSWORD}
+    username: ${DB_USER}
+    url: "jdbc:mysql://${DB_HOST}:3306/${DB_SCHEMA}"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+
+graylog:
+  instances:
+    main:
+      baseurl: ${GRAYLOG_BASE_URL}
+      username: ${GRAYLOG_USER}
+      password: ${GRAYLOG_PASSWORD}
+
+notification:
+  ms-teams-url: ${MS_TEAMS_URL}
+  logging-enabled: true

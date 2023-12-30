@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Grayalert</title>
+</head>
+<body>
+<form>
+    <b>Max seconds ago: </b>
+    <input type="number" name="maxAge" value="3600"/>
+    <input type="submit" value="filter">
+</form>
+
+<h1>Found <span th:text="${rowCount}"></span> rows</h1>
+<table border="1">
+    <thead>
+    <tr>
+        <th>App Name</th>
+        <th>Logger Name</th>
+        <th>Count</th>
+        <th>First seen</th>
+        <th>Last seen</th>
+        <th>link</th>
+        <th>Message</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="row : ${rows}">
+        <td class="app-name" th:text="${row.appName}"></td>
+        <td class="logger-name" th:text="${row.loggerName}"></td>
+        <td th:text="${row.count}"></td>
+        <td th:text="${row.firstSeen}"></td>
+        <td th:text="${row.lastSeen}"></td>
+        <td th:utext="${row.linkHtml}"></td>
+        <td><span th:title="${row.message}" th:text="${row.shortMessage}"></span></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
