@@ -39,9 +39,9 @@ This isn't just another error monitoring tool. GrayAlert is about giving you pea
 | 2023-12-30 07:13:15 | accounting-service | com.example.PersistenceManager | java.lang.NullPointerException              | Yes (different category)                 | Yes |
 | 2023-12-30 07:13:16 | product-service    | com.example.PersistenceManager | java.lang.NullPointerException with stacktrace1             | Yes (different microservice)             | Yes |
 | 2023-12-30 07:13:17 | product-service    | com.example.PersistenceManager | java.lang.NullPointerException with stacktrace2   | yes (similar to already seen message)     | No :( |
-| 2023-12-30 07:23:17 | api-gateway    | org.springframework.boot.autoconfigure.web.reactive.error.AbstractErrorWebExceptionHandler | [6683c8d3-28053735] 500 Server Error for HTTP GET "/user/info"   | Yes (first time for this problem)     | Yes |
-| 2023-12-30 07:23:27 | api-gateway    | org.springframework.boot.autoconfigure.web.reactive.error.AbstractErrorWebExceptionHandler | [1183c8d2-12033373] 500 Server Error for HTTP GET "/user/info"   |  no (too similar to previous, but with different prefix) | Yes  :(|
-| 2023-12-30 07:23:27 | api-gateway    | org.springframework.boot.autoconfigure.web.reactive.error.AbstractErrorWebExceptionHandler | [1183c8d2-12033456] 500 Server Error for HTTP GET "/user/details"   | Yes (currently grayalert would notify about it) | Yes |
+| 2023-12-30 07:23:17 | api-gateway    | o.s.b.a.w.r.e.AbstractErrorWebExceptionHandler | [6683c8d3-28053735] 500 Server Error for HTTP GET "/user/info"   | Yes (first time for this problem)     | Yes |
+| 2023-12-30 07:23:27 | api-gateway    | o.s.b.a.w.r.e.AbstractErrorWebExceptionHandler | [1183c8d2-12033373] 500 Server Error for HTTP GET "/user/info"   |  no (too similar to previous, but with different prefix) | Yes  :(|
+| 2023-12-30 07:23:27 | api-gateway    | o.s.b.a.w.r.e.AbstractErrorWebExceptionHandler | [1183c8d2-12033456] 500 Server Error for HTTP GET "/user/details"   | Yes (currently grayalert would notify about it) | Yes |
 
 
 ## Installation
