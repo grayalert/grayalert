@@ -16,7 +16,12 @@ graylog:
       baseurl: ${GRAYLOG_BASE_URL}
       username: ${GRAYLOG_USER}
       password: ${GRAYLOG_PASSWORD}
+    # optional secondary instance
+    secondary:
+      baseurl: ${GRAYLOG_SECONDARY_BASE_URL:}
+      username: ${GRAYLOG_SECONDARY_USER:}
+      password: ${GRAYLOG_SECONDARY_PASSWORD:}
 
 notification:
-  ms-teams-url: ${MS_TEAMS_URL}
+  ms-teams-url: ${MS_TEAMS_URL:}
   logging-enabled: true

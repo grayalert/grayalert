@@ -34,8 +34,13 @@ public class GraylogConfiguration {
 
     @Bean
     public MultiSourceLogFetcher multiSourceLogFetcher(CSVLogParser csvLogParser, UTCClock utcClock) {
-        Collection<LogFetcher> fetchers = instances.values().stream().map(x ->
-                createGraylogFetcher(csvLogParser, utcClock, x)).collect(Collectors.toList());
+        Collection<LogFetcher> fetchers = instances.values().stream().
+                filter(graylogParams -> graylogParams.getBaseUrl() != null && !graylogParams.getBaseUrl().trim().isEmpty()).
+                map(graylogParams ->
+                createGraylogFetcher(csvLogParser, utcClock, graylogParams)).collect(Collectors.toList());
+        if (fetchers.isEmpty()) {
+            throw new IllegalArgumentException("No logFetchers configured");
+        }
         return new MultiSourceLogFetcher(fetchers);
     }
 
