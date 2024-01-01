@@ -1,5 +1,7 @@
 # GrayAlert
 
+![docker-publish](https://github.com/grayalert/grayalert/actions/workflows/docker-publish.yml/badge.svg)
+
 **GrayAlert** is a microservice designed to enhance your [Graylog](https://github.com/Graylog2/graylog2-server) centralized logging system. It's a lightweight addition that notifies you about new, unique error logs, helping to filter out the noise and focus on what's important.
 
 ## Purpose
