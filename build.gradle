@@ -13,6 +13,12 @@ repositories {
     mavenLocal()
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 dependencies {
     implementation 'me.tongfei:progressbar:0.9.1'
 

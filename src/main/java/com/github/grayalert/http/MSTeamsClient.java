@@ -11,7 +11,6 @@ public interface MSTeamsClient {
 
     @RequestLine("POST {path}")
     @Headers("Content-Type: application/json")
-    //@Body("%7B\"text\": \"{text}\"%7D")
     String postMessage(@Param("path") String path, MSTeamsMessage message);
 
 }
