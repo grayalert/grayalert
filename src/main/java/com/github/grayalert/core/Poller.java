@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 @Slf4j
 public class Poller {
-    private static final int LOAD_PERIOD_SECONDS = 3600;
+    private static final int LOAD_PERIOD_SECONDS = 60; // better to take fewer records
     private static final int POLLING_PERIOD = 60;
 
     private final BatchProcessor batchProcessor;
@@ -58,18 +58,22 @@ public class Poller {
 
 
     public void fetch() {
-        if (utcClock.getCurrentTimeMillis() - minTimestamp > LOAD_PERIOD_SECONDS * 1000) {
-            log.info("minTimestamp {} is too far in the past, setting to now minus {} seconds", minTimestamp, LOAD_PERIOD_SECONDS);
-            minTimestamp = utcClock.getCurrentTimeMillis() - LOAD_PERIOD_SECONDS * 1000;
-        }
-        log.info("Fetching records using minTimestamp {}", minTimestamp);        
-        List<LogEntry> records = multiSourceLogFetcher.fetchLogEntries(minTimestamp);
-        log.info("Fetched {} records using minTimestamp {}", records.size(), minTimestamp);
-        processRecords(records);
-        OptionalLong maxTimestamp = records.stream().mapToLong(LogEntry::getTimestamp).max();
-        if (maxTimestamp.isPresent()) {
-            log.info("Updated minTimestamp to {}", minTimestamp);
-            this.minTimestamp = maxTimestamp.getAsLong();
+        try {
+            if (utcClock.getCurrentTimeMillis() - minTimestamp > LOAD_PERIOD_SECONDS * 1000) {
+                log.info("minTimestamp {} is too far in the past, setting to now minus {} seconds", minTimestamp, LOAD_PERIOD_SECONDS);
+                minTimestamp = utcClock.getCurrentTimeMillis() - LOAD_PERIOD_SECONDS * 1000;
+            }
+            log.info("Fetching records using minTimestamp {}", minTimestamp);        
+            List<LogEntry> records = multiSourceLogFetcher.fetchLogEntries(minTimestamp);
+            log.info("Fetched {} records using minTimestamp {}", records.size(), minTimestamp);
+            processRecords(records);
+            OptionalLong maxTimestamp = records.stream().mapToLong(LogEntry::getTimestamp).max();
+            if (maxTimestamp.isPresent()) {
+                log.info("Updated minTimestamp to {}", minTimestamp);
+                this.minTimestamp = maxTimestamp.getAsLong();
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         }
         scheduler.schedule(this::fetch, POLLING_PERIOD, TimeUnit.SECONDS);
 
