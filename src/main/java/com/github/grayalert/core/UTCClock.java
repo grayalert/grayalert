@@ -1,14 +1,15 @@
 package com.github.grayalert.core;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
-import java.time.ZoneId;
 
 @Service
+@RequiredArgsConstructor
 public class UTCClock {
+    private final Clock clock;
 
-    private final Clock clock = Clock.system(ZoneId.of("UTC"));
     public Long getCurrentTimeMillis() {
         return clock.millis();
     }

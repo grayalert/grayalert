@@ -30,7 +30,8 @@ public class GrayLogFetcher implements LogFetcher {
     @Override
     public List<LogEntry> fetchLogEntries(Long minTimestamp) {
         String query = "level: 3";
-        int timerange = (int) (utcClock.getCurrentTimeMillis() / 1000 - minTimestamp / 1000);
+        // Calculate timerange in seconds, ensuring it's at least 24 hours
+        int timerange = Math.max(86400, (int) (utcClock.getCurrentTimeMillis() / 1000 - minTimestamp / 1000));
         BasicAuthRequestInterceptor requestInterceptor = new BasicAuthRequestInterceptor(username, password);
         GraylogClient client = Feign.builder()
                 .requestInterceptor(requestInterceptor)
@@ -44,7 +45,6 @@ public class GrayLogFetcher implements LogFetcher {
             CSVParser parser = new CSVParser(new StringReader(response), CSVFormat.DEFAULT.withFirstRecordAsHeader());
             List<LogEntry> records = new ArrayList<>();
             for (CSVRecord csvRecord : parser) {
-
                 LogEntry record = csvLogParser.parseCSVRecord(csvRecord);
                 record.setGraylogBaseUrl(baseUrl);
                 records.add(record);
@@ -53,8 +53,5 @@ public class GrayLogFetcher implements LogFetcher {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
-
-
 }

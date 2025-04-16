@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.util.List;
 
 @Service
@@ -13,6 +14,8 @@ import java.util.List;
 public class DBManager {
 
     private final EntityManager entityManager;
+    private final Clock clock;
+
     @Transactional
     public List<LogExample> load() {
         TypedQuery<LogExample> query = entityManager.createQuery("SELECT le FROM LogExample le", LogExample.class);
@@ -23,5 +26,23 @@ public class DBManager {
     @Transactional
     public void save(List<LogExample> examples) {
         examples.forEach(entityManager::merge);
+    }
+
+    @Transactional
+    public int deleteOlderThan(long seconds) {
+        return deleteOlderThan(seconds, clock.millis());
+    }
+
+    @Transactional
+    public void clear() {
+        entityManager.createQuery("DELETE FROM LogExample")
+                .executeUpdate();
+    }
+    @Transactional
+    public int deleteOlderThan(long seconds, long referenceTime) {
+        long cutoffTime = referenceTime - (seconds * 1000);
+        return entityManager.createQuery("DELETE FROM LogExample le WHERE le.lastTimestamp < :cutoffTime OR (le.lastTimestamp IS NULL AND le.firstTimestamp < :cutoffTime)")
+                .setParameter("cutoffTime", cutoffTime)
+                .executeUpdate();
     }
 }

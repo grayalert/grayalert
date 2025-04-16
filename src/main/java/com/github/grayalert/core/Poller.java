@@ -19,6 +19,7 @@ import java.util.OptionalLong;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @RequiredArgsConstructor
@@ -29,33 +30,30 @@ public class Poller {
 
     private final BatchProcessor batchProcessor;
     private final LogBucketSplitter logBucketSplitter;
-
     private final DBManager dbManager;
-
-
     private final MultiSourceLogFetcher multiSourceLogFetcher;
     private final UTCClock utcClock;
-
     private final AlarmManager alarmManager;
     private Long minTimestamp;
-
     private ScheduledExecutorService scheduler;
+    private final AtomicBoolean isInitialized = new AtomicBoolean(false);
 
     @Transactional
     @PostConstruct
     public void init() {
-        this.minTimestamp = utcClock.getCurrentTimeMillis() - LOAD_PERIOD_SECONDS * 1000;
-        List<LogExample> examples = dbManager.load();
-        log.info("Loaded {} examples from database", examples.size());
-        if (!examples.isEmpty()) {
-            // we are only interested in messages that have been logged since
-            this.minTimestamp = examples.stream().mapToLong(x -> x.getLastTimestamp() != null ? x.getLastTimestamp() : x.getFirstTimestamp()).max().getAsLong();
+        if (!isInitialized.getAndSet(true)) {
+            this.minTimestamp = utcClock.getCurrentTimeMillis() - LOAD_PERIOD_SECONDS * 1000;
+            List<LogExample> examples = dbManager.load();
+            log.info("Loaded {} examples from database", examples.size());
+            if (!examples.isEmpty()) {
+                // we are only interested in messages that have been logged since
+                this.minTimestamp = examples.stream().mapToLong(x -> x.getLastTimestamp() != null ? x.getLastTimestamp() : x.getFirstTimestamp()).max().getAsLong();
+            }
+            batchProcessor.loadExamples(examples);
+            this.scheduler = Executors.newScheduledThreadPool(1);
+            scheduler.schedule(this::fetch, 0, TimeUnit.SECONDS);
         }
-        batchProcessor.loadExamples(examples);
-        this.scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.schedule(this::fetch, 0, TimeUnit.SECONDS);
     }
-
 
     public void fetch() {
         try {
@@ -69,16 +67,16 @@ public class Poller {
             processRecords(records);
             OptionalLong maxTimestamp = records.stream().mapToLong(LogEntry::getTimestamp).max();
             if (maxTimestamp.isPresent()) {
-                log.info("Updated minTimestamp to {}", minTimestamp);
                 this.minTimestamp = maxTimestamp.getAsLong();
+                log.info("Updated minTimestamp to {}", this.minTimestamp);
             }
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
-        scheduler.schedule(this::fetch, POLLING_PERIOD, TimeUnit.SECONDS);
-
+        if (scheduler != null) {
+            scheduler.schedule(this::fetch, POLLING_PERIOD, TimeUnit.SECONDS);
+        }
     }
-
 
     private void processRecords(List<LogEntry> records) {
         try {
@@ -91,7 +89,10 @@ public class Poller {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
-
     }
 
+    // For testing purposes
+    public void triggerFetch() {
+        fetch();
+    }
 }

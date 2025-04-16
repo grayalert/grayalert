@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'com.google.cloud.tools.jib' version '3.1.4'
+    id 'jacoco' 
 }
 
 group = "com.github"
@@ -30,27 +31,54 @@ dependencies {
     implementation('org.apache.commons:commons-collections4:4.3')
     implementation 'org.apache.commons:commons-csv:1.8'
 
-
     implementation('com.mysql:mysql-connector-j:8.0.32')
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+
+    testImplementation 'com.h2database:h2'
+    testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:3.0.1'
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
 }
 
-compileJava {
+tasks.withType(JavaCompile) {
     options.compilerArgs << '-parameters'
 }
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        csv.required = false
+        html.required = true
+        html.outputLocation = layout.buildDirectory.dir('reports/coverage')
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.7
+            }
+        }
+    }
+}
+
+check {
+    dependsOn jacocoTestCoverageVerification
 }
 
 // alternatively just build using Dockerfile

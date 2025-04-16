@@ -1,39 +1,67 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Grayalert</title>
+    <title>Graylog Alerts</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
 </head>
 <body>
-<form>
-    <b>Max seconds ago: </b>
-    <input type="number" name="maxAge" value="3600"/>
-    <input type="submit" value="filter">
-</form>
+    <h1>Graylog Alerts</h1>
+    <p>Found <span id="rowCount" th:text="${rowCount}"></span> rows</p>
+    
+    <form>
+        <label for="maxAge">Filter by max seconds ago:</label>
+        <input type="number" id="maxAge" name="maxAge" value="3600">
+        <button type="submit">Filter</button>
+    </form>
 
-<h1>Found <span th:text="${rowCount}"></span> rows</h1>
-<table border="1">
-    <thead>
-    <tr>
-        <th>App Name</th>
-        <th>Logger Name</th>
-        <th>Count</th>
-        <th>First seen</th>
-        <th>Last seen</th>
-        <th>link</th>
-        <th>Message</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="row : ${rows}">
-        <td class="app-name" th:text="${row.appName}"></td>
-        <td class="logger-name" th:text="${row.loggerName}"></td>
-        <td th:text="${row.count}"></td>
-        <td th:text="${row.firstSeen}"></td>
-        <td th:text="${row.lastSeen}"></td>
-        <td th:utext="${row.linkHtml}"></td>
-        <td><span th:title="${row.message}" th:text="${row.shortMessage}"></span></td>
-    </tr>
-    </tbody>
-</table>
+    <form action="/api/logs/delete-old" method="post">
+        <label for="ageInSeconds">Delete logs older than (seconds):</label>
+        <input type="number" id="ageInSeconds" name="ageInSeconds" required>
+        <button type="submit">Delete</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>App Name</th>
+                <th>Logger Name</th>
+                <th>Message</th>
+                <th>Count</th>
+                <th>First Seen</th>
+                <th>Last Seen</th>
+                <th>Trace ID</th>
+                <th>Link</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="row : ${rows}">
+                <td th:text="${row.appName}"></td>
+                <td th:text="${row.loggerName}"></td>
+                <td th:text="${row.shortMessage}"></td>
+                <td th:text="${row.count}"></td>
+                <td th:text="${row.firstSeen}"></td>
+                <td th:text="${row.lastSeen}"></td>
+                <td th:text="${row.firstTraceId}"></td>
+                <td><a th:href="${row.linkHtml}" th:text="${row.url}" target="_blank"></a></td>
+            </tr>
+        </tbody>
+    </table>
 </body>
 </html>
