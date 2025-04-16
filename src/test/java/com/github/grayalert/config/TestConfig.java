@@ -1,17 +1,20 @@
 package com.github.grayalert.config;
 
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.test.context.ActiveProfiles;
 
 import javax.sql.DataSource;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 
-@Configuration
+@TestConfiguration
+@ActiveProfiles("test")
 public class TestConfig {
 
     @Bean
@@ -22,6 +25,7 @@ public class TestConfig {
     }
 
     @Bean
+    @Primary
     public Clock clock() {
         // Return a fixed clock set to 2024-03-20T15:02:00.000Z
         return Clock.fixed(

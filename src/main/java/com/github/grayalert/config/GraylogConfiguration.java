@@ -11,6 +11,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+
+import java.time.Clock;
+import java.time.ZoneId;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -43,6 +47,13 @@ public class GraylogConfiguration {
         }
         return new MultiSourceLogFetcher(fetchers);
     }
+
+    @Bean
+    public Clock clock() {
+        // Return a fixed clock set to 2024-03-20T15:02:00.000Z
+        return Clock.system(ZoneId.of("UTC"));
+    }
+
 
     private GrayLogFetcher createGraylogFetcher(CSVLogParser csvLogParser, UTCClock utcClock, GraylogParams graylogParams) {
         try {
