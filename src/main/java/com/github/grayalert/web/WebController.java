@@ -20,7 +20,7 @@ public class WebController {
     @GetMapping("/")
     public String index(Model model) {
         List<LogExample> records = dbManager.load();
-        model.addAttribute("logExamples", records);
+        model.addAttribute("rows", records);
         model.addAttribute("rowCount", records.size());
         return "list";
     }
