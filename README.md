@@ -1,6 +1,6 @@
 # GrayAlert
 
-![Coverage](https://img.shields.io/badge/coverage-$(cat coverage.json | jq -r .message)-$(cat coverage.json | jq -r .color))
+![Coverage](https://img.shields.io/badge/coverage:0%25-red)
 
 ![docker-publish](https://github.com/grayalert/grayalert/actions/workflows/docker-publish.yml/badge.svg)
 

@@ -27,12 +27,15 @@ jobs:
         with:
           message: |
             Coverage report: [HTML Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            ![Coverage](https://img.shields.io/badge/coverage-$(cat coverage.json | jq -r .message)-$(cat coverage.json | jq -r .color))
-      - name: Commit coverage badge
+            ![Coverage](https://img.shields.io/badge/coverage:$(cat coverage.json | jq -r .message)-$(cat coverage.json | jq -r .color))
+      - name: Update README with coverage
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
+          COVERAGE=$(cat coverage.json | jq -r .message)
+          COLOR=$(cat coverage.json | jq -r .color)
+          sed -i "s|![Coverage](https://img.shields.io/badge/coverage:[0-9]*%25-[a-z]*)|![Coverage](https://img.shields.io/badge/coverage:$COVERAGE-$COLOR)|" README.md
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add coverage.json
+          git add README.md
           git commit -m "Update coverage badge"
           git push 
