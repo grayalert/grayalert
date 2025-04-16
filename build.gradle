@@ -77,6 +77,21 @@ jacocoTestCoverageVerification {
     }
 }
 
+// Add task to generate coverage badge
+task generateCoverageBadge(type: Exec) {
+    dependsOn jacocoTestReport
+    commandLine 'sh', '-c', '''
+        COVERAGE=$(cat build/reports/jacoco/test/jacocoTestReport.xml | grep -o "line-rate=\\"[0-9.]*\\"" | cut -d\\" -f2)
+        PERCENTAGE=$(echo "$COVERAGE * 100" | bc | awk "{printf \\"%.0f%%\\", $1}")
+        if (( $(echo "$COVERAGE >= 0.9" | bc -l) )); then COLOR=brightgreen
+        elif (( $(echo "$COVERAGE >= 0.8" | bc -l) )); then COLOR=green
+        elif (( $(echo "$COVERAGE >= 0.7" | bc -l) )); then COLOR=yellow
+        else COLOR=red
+        fi
+        echo "{\\"schemaVersion\\": 1, \\"label\\": \\"coverage\\", \\"message\\": \\"$PERCENTAGE\\", \\"color\\": \\"$COLOR\\"}" > coverage.json
+    '''
+}
+
 check {
     dependsOn jacocoTestCoverageVerification
 }
