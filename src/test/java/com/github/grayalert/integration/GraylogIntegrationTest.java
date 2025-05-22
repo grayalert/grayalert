@@ -112,9 +112,32 @@ public class GraylogIntegrationTest {
         // Then fetch the main page
         ResponseEntity<String> response = restTemplate.getForEntity("http://localhost:" + port + "/", String.class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-
         String html = response.getBody();
+        List<LogExample> htmlLogExamples = new java.util.ArrayList<>();
+        org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(html);
+        org.jsoup.select.Elements rows = doc.select("#recordsTable tbody tr");
+        for (org.jsoup.nodes.Element row : rows) {
+            LogExample logExample = new LogExample();
+            logExample.setAppName(row.selectFirst("td.appName").text());
+            logExample.setLoggerName(row.selectFirst("td.loggerName").text());
+            logExample.setShortMessage(row.selectFirst("td.shortMessage").text());
+            logExample.setCount(Integer.parseInt(row.selectFirst("td.count").text()));
+            String firstSeen = row.selectFirst("td.firstSeen").text();
+            logExample.setFirstTimestamp(parseTime(firstSeen));
+            String lastSeen = row.selectFirst("td.lastSeen").text();
+            logExample.setLastTimestamp(parseTime(lastSeen));
+            logExample.setFirstTraceId(row.selectFirst("td.firstTraceId").text());
+            htmlLogExamples.add(logExample);
+        }
+        assertEquals(3, htmlLogExamples.size(), "HTML contains wrong number of rows: " + html);
         assertTrue(html.contains("<span id=\"rowCount\">3"), "HTML contains wrong content: " + html);
+    }
+
+    private static Long parseTime(String firstSeen) {
+        if (firstSeen == null || firstSeen.isEmpty()) {
+            return null;
+        }
+        return Instant.parse(firstSeen.replace(" ", "T") + "Z").toEpochMilli();
     }
 
     @Test

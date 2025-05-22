@@ -8,17 +8,19 @@ spring:
     url: "jdbc:mysql://${DB_HOST}:3306/${DB_SCHEMA}"
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-
+debug: true
 
 graylog:
   instances:
     main:
       baseurl: ${GRAYLOG_BASE_URL}
+      weburl: ${GRAYLOG_WEB_URL}
       username: ${GRAYLOG_USER}
       password: ${GRAYLOG_PASSWORD}
     # optional secondary instance
     secondary:
       baseurl: ${GRAYLOG_SECONDARY_BASE_URL:}
+      weburl: ${GRAYLOG_SECONDARY_WEB_URL:}
       username: ${GRAYLOG_SECONDARY_USER:}
       password: ${GRAYLOG_SECONDARY_PASSWORD:}
 

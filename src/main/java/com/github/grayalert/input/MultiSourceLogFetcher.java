@@ -1,6 +1,11 @@
 package com.github.grayalert.input;
 
 import com.github.grayalert.dto.LogEntry;
+import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +19,18 @@ public class MultiSourceLogFetcher implements LogFetcher {
     private final Collection<LogFetcher> fetchers;
 
     @Override
-    public List<LogEntry> fetchLogEntries(Long minTimestamp) {
-        return fetchers.stream().
-                map(fetcher -> fetcher.fetchLogEntries(minTimestamp)).
-                flatMap(List::stream).
-                collect(Collectors.toList());
+    public Iterator<LogEntry> fetchLogEntries(Long minTimestamp) {
+        // Combine iterators into a single stream and return as an iterator
+        return fetchers.stream()
+            .map(fetcher -> fetcher.fetchLogEntries(minTimestamp)) // Stream<Iterator<LogEntry>>
+            .flatMap(this::iteratorToStream) // Combine into a single Stream<LogEntry>
+            .iterator();
+    }
+
+    private Stream<LogEntry> iteratorToStream(Iterator<LogEntry> iterator) {
+        return StreamSupport.stream(
+            Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED),
+            false
+        );
     }
 }

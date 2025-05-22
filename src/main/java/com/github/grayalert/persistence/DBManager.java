@@ -13,6 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DBManager {
 
+    private final LogExampleRepository repo;
     private final EntityManager entityManager;
     private final Clock clock;
 
@@ -25,7 +26,7 @@ public class DBManager {
 
     @Transactional
     public void save(List<LogExample> examples) {
-        examples.forEach(entityManager::merge);
+        repo.saveAll(examples);
     }
 
     @Transactional

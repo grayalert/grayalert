@@ -27,24 +27,29 @@ public class LogExample  {
     @Column(length = 500)
     public String baseUrl;
 
-    @Transient
+    @Column(length = 500)
     public String linkHtml;
 
-    @Transient
+    @Column(length = 500)
     public String url;
-    @Transient
+    @Column(length = 500)
     public String shortMessage;
 
-
+    @Column(length = 500)
     public Integer count;
+    @Column(length = 500)
     public Long firstTimestamp;
+    @Column(length = 500)
     public String firstGraylogId;
+    @Column(length = 500)
     public String firstTraceId;
 
 
 
     public Long lastTimestamp;
+    @Column(length = 500)
     public String lastGraylogId;
+    @Column(length = 500)
     public String lastTraceId;
 
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");

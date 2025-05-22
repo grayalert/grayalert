@@ -3,7 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'com.google.cloud.tools.jib' version '3.1.4'
-    id 'jacoco' 
+    id 'jacoco'
 }
 
 group = "com.github"
@@ -35,11 +35,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'de.siegmar:logback-gelf:4.0.2'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+    testImplementation 'org.jsoup:jsoup:1.17.2'
 
     testImplementation 'com.h2database:h2'
     testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:3.0.1'
