@@ -13,8 +13,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.io.ClassPathResource;
@@ -32,6 +35,7 @@ import java.util.List;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -49,7 +53,7 @@ public class GraylogIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    @Autowired
+    @SpyBean
     private DBManager dbManager;
 
     @DynamicPropertySource
@@ -109,6 +113,17 @@ public class GraylogIntegrationTest {
         // First run the integration test to populate the database
         testGraylogIntegration();
 
+        ArgumentCaptor<List> rowsSaveCaptor = ArgumentCaptor.forClass(List.class);
+        Mockito.verify(dbManager, Mockito.atLeastOnce()).save(rowsSaveCaptor.capture());
+        List<LogExample> htmlLogExamples = fetchRows();
+        assertEquals(3, htmlLogExamples.size());
+        assertEquals(3, rowsSaveCaptor.getValue().size());
+        poller.triggerFetch();
+        List<LogExample> updatedHtmlLogExamples = fetchRows();
+        assertEquals(3, updatedHtmlLogExamples.size());
+    }
+
+    private List<LogExample> fetchRows() {
         // Then fetch the main page
         ResponseEntity<String> response = restTemplate.getForEntity("http://localhost:" + port + "/", String.class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -119,8 +134,10 @@ public class GraylogIntegrationTest {
         for (org.jsoup.nodes.Element row : rows) {
             LogExample logExample = new LogExample();
             logExample.setAppName(row.selectFirst("td.appName").text());
+            logExample.setId(row.attr("id"));
             logExample.setLoggerName(row.selectFirst("td.loggerName").text());
             logExample.setShortMessage(row.selectFirst("td.shortMessage").text());
+            logExample.setLinkHtml(row.selectFirst("td.linkHtml a").text());
             logExample.setCount(Integer.parseInt(row.selectFirst("td.count").text()));
             String firstSeen = row.selectFirst("td.firstSeen").text();
             logExample.setFirstTimestamp(parseTime(firstSeen));
@@ -129,8 +146,7 @@ public class GraylogIntegrationTest {
             logExample.setFirstTraceId(row.selectFirst("td.firstTraceId").text());
             htmlLogExamples.add(logExample);
         }
-        assertEquals(3, htmlLogExamples.size(), "HTML contains wrong number of rows: " + html);
-        assertTrue(html.contains("<span id=\"rowCount\">3"), "HTML contains wrong content: " + html);
+        return htmlLogExamples;
     }
 
     private static Long parseTime(String firstSeen) {
@@ -150,4 +166,4 @@ public class GraylogIntegrationTest {
         List<LogExample> logExamples = dbManager.load();
         assertEquals(3, logExamples.size());
     }
-} 
+}

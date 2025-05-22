@@ -54,7 +54,7 @@
   </tr>
   </thead>
   <tbody>
-  <tr th:each="row : ${rows}">
+  <tr th:id="${row.id}" th:each="row : ${rows}">
     <td class="appName" th:text="${row.appName}"></td>
     <td class="loggerName" th:text="${row.loggerName}"></td>
     <td class="shortMessage" th:text="${row.shortMessage}"></td>
