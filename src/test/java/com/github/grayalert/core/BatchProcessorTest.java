@@ -1,7 +1,9 @@
 package com.github.grayalert.core;
 
+import com.github.grayalert.config.GraylogConfiguration;
 import com.github.grayalert.dto.BatchProcessResult;
 import com.github.grayalert.dto.LogEntry;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import com.github.grayalert.persistence.LogExample;
 
@@ -33,7 +35,8 @@ class BatchProcessorTest {
 
     private static BatchProcessor initBatchProcessor() {
         MessageProcessor messageProcessor = new MessageProcessor(new MessageTokeniser());
-        BatchProcessor processor = new BatchProcessor(messageProcessor, new LogBucketSplitter(new AppNameExtractor()), new GraylogLinkBuilder());
+        BatchProcessor processor = new BatchProcessor(messageProcessor, new LogBucketSplitter(new AppNameExtractor()), new GraylogLinkBuilder(new GraylogConfiguration(
+            Map.of())));
         return processor;
     }
 }

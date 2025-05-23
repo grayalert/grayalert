@@ -1,17 +1,39 @@
 package com.github.grayalert.core;
 
+import com.github.grayalert.config.GraylogConfiguration;
 import com.github.grayalert.dto.LogMessageAccumulator;
 import com.github.grayalert.dto.LogOccurrence;
 import com.github.grayalert.persistence.LogExample;
+import jakarta.annotation.PostConstruct;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class GraylogLinkBuilder {
+    private final GraylogConfiguration graylogConfiguration;
+    private Map<String, String> baseUrlMappings;
+
+    private Map<String, String> provideBaseUrlToWebUrlMappings() {
+        Map<String, String> baseUrlMappings = graylogConfiguration.getInstances().entrySet().stream()
+            .filter(entry -> entry.getValue().getBaseUrl() != null && entry.getValue().getWebUrl() != null)
+            .collect(Collectors.toMap(
+                entry -> entry.getValue().getBaseUrl(),
+                entry -> entry.getValue().getWebUrl()
+            ));
+
+        return baseUrlMappings;
+    }
+    @PostConstruct public void init() {
+        baseUrlMappings = provideBaseUrlToWebUrlMappings();
+    }
+
     public String getGraylogLink(LogMessageAccumulator logMessageAccumulator) {
         LogOccurrence first = logMessageAccumulator.getFirst();
         String html = calculateLink(first, "first");
@@ -86,7 +108,7 @@ public class GraylogLinkBuilder {
         LAST
     }
 
-    public String getGraylogHtmlLinks(LogExample logExample, Map<String, String> baseUrlMappings) {
+    public String getGraylogHtmlLinks(LogExample logExample) {
         StringBuilder html = new StringBuilder();
 
         if (logExample.getFirstTraceId() != null && logExample.getFirstTimestamp() != null) {

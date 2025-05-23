@@ -17,21 +17,14 @@ public class LogExampleService {
 
     private final DBManager dbManager;
     private final GraylogLinkBuilder graylogLinkBuilder;
-    private final GraylogConfiguration graylogConfiguration;
 
     public List<LogExample> loadAndSetHtmlLinks() {
         // Create baseUrlMappings from GraylogConfiguration
-        Map<String, String> baseUrlMappings = graylogConfiguration.getInstances().entrySet().stream()
-                .filter(entry -> entry.getValue().getBaseUrl() != null && entry.getValue().getWebUrl() != null)
-                .collect(Collectors.toMap(
-                        entry -> entry.getValue().getBaseUrl(),
-                        entry -> entry.getValue().getWebUrl()
-                ));
 
         // Load LogExamples and set htmlLink
         List<LogExample> logExamples = dbManager.load();
         logExamples.forEach(logExample -> {
-            String htmlLink = graylogLinkBuilder.getGraylogHtmlLinks(logExample, baseUrlMappings);
+            String htmlLink = graylogLinkBuilder.getGraylogHtmlLinks(logExample);
             logExample.setLinkHtml(htmlLink);
         });
 

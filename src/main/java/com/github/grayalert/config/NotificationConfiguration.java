@@ -31,10 +31,10 @@ public class NotificationConfiguration {
     private String msTeamsUrl;
 
     @Bean
-    public AlarmManager alarmManager(GraylogLinkBuilder graylogLinkBuilder) {
+    public AlarmManager alarmManager(LoggingAlarmNotifier loggingAlarmNotifier, GraylogLinkBuilder graylogLinkBuilder) {
         List<AlarmNotifier> notifiers = new ArrayList<>();
         if (loggingEnabled != null && loggingEnabled) {
-            notifiers.add(new LoggingAlarmNotifier());
+            notifiers.add(loggingAlarmNotifier);
         }
         if (msTeamsUrl != null && !msTeamsUrl.isEmpty()) {
             try {

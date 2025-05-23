@@ -1,11 +1,11 @@
 package com.github.grayalert.integration;
 
+import com.github.grayalert.output.AlarmNotifier;
+import com.github.grayalert.output.LoggingAlarmNotifier;
+import com.github.grayalert.output.MSTeamsNotifier;
 import com.github.grayalert.persistence.DBManager;
 import com.github.grayalert.persistence.LogExample;
 import com.github.grayalert.core.Poller;
-import com.github.grayalert.input.CSVLogParser;
-import com.github.grayalert.dto.LogEntry;
-import com.github.grayalert.http.GraylogClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyList;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -57,6 +56,9 @@ public class GraylogIntegrationTest {
 
     @SpyBean
     private DBManager dbManager;
+
+    @SpyBean
+    LoggingAlarmNotifier alarmNotifier;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -132,6 +134,10 @@ public class GraylogIntegrationTest {
             assertNotNull(logExample.getLastSeen());
             assertNotSame("",logExample.getLastSeen());
         }
+
+        ArgumentCaptor<String> alarmMessageCaptor = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(alarmNotifier).notifyMessage(alarmMessageCaptor.capture());
+        System.out.println(alarmMessageCaptor.getValue());
     }
 
     private List<LogExample> fetchRows() {
