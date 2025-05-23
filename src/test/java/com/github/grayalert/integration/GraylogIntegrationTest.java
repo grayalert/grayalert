@@ -164,6 +164,7 @@ public class GraylogIntegrationTest {
 
         OptionalLong maxTimestamp = updatedHtmlLogExamples.stream()
             .filter(p -> p.getLastTimestamp() != null).mapToLong(LogExample::getLastTimestamp).max();
+        Long minTimestamp = poller.calculateMinTimestamp(updatedHtmlLogExamples);
 
         long maxAge = clock.millis() - maxTimestamp.getAsLong() + 60_000;
         System.out.println("Last timestamp: " + maxTimestamp);

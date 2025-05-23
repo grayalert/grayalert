@@ -20,6 +20,12 @@ public class DBManager {
     private final Clock clock;
 
     @Transactional
+    public Long getMaxLastTimestamp() {
+        return entityManager.createQuery("SELECT MAX(le.lastTimestamp) FROM LogExample le", Long.class)
+            .getSingleResult();
+    }
+
+    @Transactional
     public List<LogExample> load(Long maxAge) {
         if (maxAge == null) {
             TypedQuery<LogExample> query = entityManager.createQuery(

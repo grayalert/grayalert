@@ -9,8 +9,8 @@ import com.github.grayalert.persistence.DBManager;
 import com.github.grayalert.persistence.LogExample;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -50,22 +50,44 @@ public class Poller {
     @PostConstruct
     public void init() {
         if (!isInitialized.getAndSet(true)) {
-            this.minTimestamp = utcClock.getCurrentTimeMillis() - LOAD_PERIOD_SECONDS * 1000;
             List<LogExample> examples = dbManager.load(null);
             log.info("Loaded {} examples from database", examples.size());
-            if (!examples.isEmpty()) {
-                // we are only interested in messages that have been logged since
-                this.minTimestamp = examples.stream().mapToLong(x -> x.getLastTimestamp() != null ? x.getLastTimestamp() : x.getFirstTimestamp()).max().getAsLong();
-            }
+            this.minTimestamp = calculateMinTimestamp(examples);
             batchProcessor.loadExamples(examples);
             this.scheduler = Executors.newScheduledThreadPool(1);
             scheduler.schedule(this::fetch, 0, TimeUnit.SECONDS);
         }
     }
 
+    public Long calculateMinTimestamp(List<LogExample> examples) {
+        Long maxLastTimestampFromDB = dbManager.getMaxLastTimestamp();
+        log.info("Max lastTimestamp from database: {}", maxLastTimestampFromDB);
+
+        Long maxLastTimestampFromExamples = 0L;
+        if (!examples.isEmpty()) {
+            // we are only interested in messages that have been logged since
+            maxLastTimestampFromExamples = examples.stream().mapToLong(x -> x.getLastTimestamp() != null ?
+                x.getLastTimestamp() : x.getFirstTimestamp()).max().getAsLong();
+            log.info("maxLastTimestampFromExamples: {}", maxLastTimestampFromDB);
+        }
+        long dayAgo = utcClock.getCurrentTimeMillis() - LOAD_PERIOD_SECONDS * 1000;
+        if (maxLastTimestampFromDB == null) {
+            maxLastTimestampFromDB = 0L;
+        }
+        long max = Math.max(Math.max(maxLastTimestampFromDB, maxLastTimestampFromExamples), dayAgo);
+        log.info("maxLastTimestampFromDB: {} [{}], maxLastTimestampFromExamples: {} [{}], dayAgo: {} [{}] and using {} [{}]",
+            maxLastTimestampFromDB, new Date(maxLastTimestampFromDB),
+            maxLastTimestampFromExamples, new Date(maxLastTimestampFromExamples),
+            dayAgo, new Date(dayAgo),
+            max, new Date(max)
+            );
+        return max;
+    }
+
     public void fetch() {
             if (utcClock.getCurrentTimeMillis() - minTimestamp > LOAD_PERIOD_SECONDS * 1000) {
-                log.info("minTimestamp {} is too far in the past, setting to now minus {} seconds", minTimestamp, LOAD_PERIOD_SECONDS);
+                log.info("minTimestamp {} is too far in the past, setting to now minus {} seconds", minTimestamp,
+                    new Date(minTimestamp), LOAD_PERIOD_SECONDS);
                 minTimestamp = utcClock.getCurrentTimeMillis() - LOAD_PERIOD_SECONDS * 1000;
             }
             log.info("Fetching records using minTimestamp {}", minTimestamp);
@@ -99,7 +121,8 @@ public class Poller {
             alarmManager.process(batchProcessResult);
             List<LogExample> examples = batchProcessor.saveExamples();
             dbManager.save(examples);
-            log.info("Processed {} records in {} msec", batchProcessResult.getNotifications().size() ,batchProcessResult.getDurationInMsec());
+            log.info("Processed {} records and extracted {} notifications in {} msec", counter.get(),
+                batchProcessResult.getNotifications().size() ,batchProcessResult.getDurationInMsec());
             return records;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
