@@ -9,6 +9,7 @@ import com.github.grayalert.persistence.DBManager;
 import com.github.grayalert.persistence.LogExample;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
+import java.time.Clock;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;

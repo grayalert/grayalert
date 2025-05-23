@@ -50,9 +50,10 @@ public class GrayLogFetcher implements LogFetcher {
   @Override
   public Iterator<LogEntry> fetchLogEntries(Long minTimestamp) {
     String query = "level: 3";
-    // Calculate timerange in seconds, ensuring it's at least 24 hours
-    int timerange = Math.max(86400,
-        (int) (utcClock.getCurrentTimeMillis() / 1000 - minTimestamp / 1000));
+    // Calculate timerange in seconds, ensuring it's at most 24h - otherwise we just consume the same logs
+    int duration = (int) (utcClock.getCurrentTimeMillis() / 1000 - minTimestamp / 1000);
+    log.info("Duration is {} seconds", duration);
+    int timerange = Math.min(86400, duration);
     BasicAuthRequestInterceptor requestInterceptor = new BasicAuthRequestInterceptor(username,
         password);
     Options options = new Options(Duration.ofSeconds(3), Duration.ofSeconds(5), false);
