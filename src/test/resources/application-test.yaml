@@ -11,5 +11,7 @@ spring:
 graylog:
   instances:
     main:
+      base-url: http://127.0.0.1:8080
+      web-url: http://localhost:8080
       username: test
       password: test 

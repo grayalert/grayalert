@@ -62,7 +62,7 @@
     <td class="firstSeen" th:text="${row.firstSeen}"></td>
     <td class="lastSeen" th:text="${row.lastSeen}"></td>
     <td class="firstTraceId" th:text="${row.firstTraceId}"></td>
-    <td class="linkHtml"><a th:href="${row.linkHtml}" th:text="${row.url}" target="_blank"></a></td>
+    <td class="linkHtml" th:utext="${row.linkHtml}"></td>
   </tr>
   </tbody>
 </table>

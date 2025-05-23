@@ -34,6 +34,8 @@ import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 
@@ -118,9 +120,18 @@ public class GraylogIntegrationTest {
         List<LogExample> htmlLogExamples = fetchRows();
         assertEquals(3, htmlLogExamples.size());
         assertEquals(3, rowsSaveCaptor.getValue().size());
+        for (LogExample logExample : htmlLogExamples) {
+            String url = logExample.getUrl();
+            assertTrue(url.contains("rangetype=absolute"), "linkHtml should contain 'rangetype=absolute'");
+            assertTrue(url.contains("traceId"), "url doesn't contain traceId: " + url);
+        }
         poller.triggerFetch();
         List<LogExample> updatedHtmlLogExamples = fetchRows();
         assertEquals(3, updatedHtmlLogExamples.size());
+        for (LogExample logExample : updatedHtmlLogExamples) {
+            assertNotNull(logExample.getLastSeen());
+            assertNotSame("",logExample.getLastSeen());
+        }
     }
 
     private List<LogExample> fetchRows() {
@@ -138,6 +149,9 @@ public class GraylogIntegrationTest {
             logExample.setLoggerName(row.selectFirst("td.loggerName").text());
             logExample.setShortMessage(row.selectFirst("td.shortMessage").text());
             logExample.setLinkHtml(row.selectFirst("td.linkHtml a").text());
+            org.jsoup.nodes.Element linkElement = row.selectFirst("td.linkHtml a");
+            String url = linkElement != null ? linkElement.attr("href") : null;
+            logExample.setUrl(url);
             logExample.setCount(Integer.parseInt(row.selectFirst("td.count").text()));
             String firstSeen = row.selectFirst("td.firstSeen").text();
             logExample.setFirstTimestamp(parseTime(firstSeen));

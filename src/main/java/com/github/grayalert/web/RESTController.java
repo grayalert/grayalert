@@ -1,7 +1,9 @@
 package com.github.grayalert.web;
 
+import com.github.grayalert.core.LogExampleService;
 import com.github.grayalert.persistence.DBManager;
 import com.github.grayalert.persistence.LogExample;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,17 +11,16 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class RESTController {
 
     private final DBManager dbManager;
+    private final LogExampleService logExampleService;
 
-    public RESTController(DBManager dbManager) {
-        this.dbManager = dbManager;
-    }
 
     @GetMapping("/logs")
     public List<LogExample> getLogs() {
-        return dbManager.load();
+        return logExampleService.loadAndSetHtmlLinks();
     }
 
     @PostMapping("/logs/delete-old")

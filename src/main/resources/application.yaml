@@ -13,14 +13,14 @@ debug: true
 graylog:
   instances:
     main:
-      baseurl: ${GRAYLOG_BASE_URL}
-      weburl: ${GRAYLOG_WEB_URL}
+      base-url: ${GRAYLOG_BASE_URL}
+      web-url: ${GRAYLOG_WEB_URL}
       username: ${GRAYLOG_USER}
       password: ${GRAYLOG_PASSWORD}
     # optional secondary instance
     secondary:
-      baseurl: ${GRAYLOG_SECONDARY_BASE_URL:}
-      weburl: ${GRAYLOG_SECONDARY_WEB_URL:}
+      base-url: ${GRAYLOG_SECONDARY_BASE_URL:}
+      web-url: ${GRAYLOG_SECONDARY_WEB_URL:}
       username: ${GRAYLOG_SECONDARY_USER:}
       password: ${GRAYLOG_SECONDARY_PASSWORD:}
 

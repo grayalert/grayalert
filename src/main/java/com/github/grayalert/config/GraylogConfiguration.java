@@ -30,8 +30,9 @@ public class GraylogConfiguration {
     private final Map<String, GraylogParams> instances;
 
     @Data
-    static class GraylogParams {
+    public static class GraylogParams {
         String baseUrl;
+        String webUrl;
         String username;
         String password;
     }
