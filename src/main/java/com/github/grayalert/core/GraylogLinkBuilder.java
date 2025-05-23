@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 public class GraylogLinkBuilder {
 
   private final GraylogConfiguration graylogConfiguration;
-  private Map<String, String> baseUrlMappings;
+  private Map<String, String> baseUrlMappings = Map.of();
 
   private Map<String, String> provideBaseUrlToWebUrlMappings() {
     Map<String, String> baseUrlMappings = graylogConfiguration.getInstances().entrySet().stream()
@@ -47,7 +47,7 @@ public class GraylogLinkBuilder {
       firstExample.setBaseUrl(first.getBaseUrl());
       firstExample.setFirstTraceId(first.getTraceId());
       firstExample.setFirstTimestamp(first.getTimestamp());
-      String firstUrl = calculateAbsoluteUrl(firstExample, baseUrlMappings, TraceType.FIRST);
+      String firstUrl = calculateAbsoluteUrl(firstExample, TraceType.FIRST);
       html.append("<a href=\"").append(firstUrl).append("\">first</a>");
     }
 
@@ -60,7 +60,7 @@ public class GraylogLinkBuilder {
       lastExample.setBaseUrl(last.getBaseUrl());
       lastExample.setLastTraceId(last.getTraceId());
       lastExample.setLastTimestamp(last.getTimestamp());
-      String lastUrl = calculateAbsoluteUrl(lastExample, baseUrlMappings, TraceType.LAST);
+      String lastUrl = calculateAbsoluteUrl(lastExample, TraceType.LAST);
       html.append("<a href=\"").append(lastUrl).append("\">last</a>");
     }
 
@@ -68,7 +68,7 @@ public class GraylogLinkBuilder {
   }
 
 
-  public String calculateAbsoluteUrl(LogExample logExample, Map<String, String> baseUrlMappings,
+  public String calculateAbsoluteUrl(LogExample logExample,
       TraceType traceType) {
     String traceId =
         traceType == TraceType.FIRST ? logExample.getFirstTraceId() : logExample.getLastTraceId();
@@ -81,11 +81,11 @@ public class GraylogLinkBuilder {
     }
 
     // Map the base URL
-    String baseUrl = baseUrlMappings.getOrDefault(logExample.getBaseUrl(), logExample.getBaseUrl());
-    if (baseUrl == null) {
-      throw new IllegalArgumentException(
-          "Base URL mapping not found for: " + logExample.getBaseUrl());
+    String baseUrl = null;
+    if (logExample.getBaseUrl() != null) {
+       baseUrl = baseUrlMappings.getOrDefault(logExample.getBaseUrl(), logExample.getBaseUrl());
     }
+
 
     // Format the timestamps
     Instant instant = Instant.ofEpochMilli(timestamp);
@@ -113,7 +113,7 @@ public class GraylogLinkBuilder {
     StringBuilder html = new StringBuilder();
 
     if (logExample.getFirstTraceId() != null && logExample.getFirstTimestamp() != null) {
-      String firstUrl = calculateAbsoluteUrl(logExample, baseUrlMappings, TraceType.FIRST);
+      String firstUrl = calculateAbsoluteUrl(logExample, TraceType.FIRST);
       html.append("<a href=\"").append(firstUrl).append("\">first</a>");
     }
 
@@ -121,7 +121,7 @@ public class GraylogLinkBuilder {
       if (html.length() > 0) {
         html.append("&nbsp;");
       }
-      String lastUrl = calculateAbsoluteUrl(logExample, baseUrlMappings, TraceType.LAST);
+      String lastUrl = calculateAbsoluteUrl(logExample, TraceType.LAST);
       html.append("<a href=\"").append(lastUrl).append("\">last</a>");
     }
 
