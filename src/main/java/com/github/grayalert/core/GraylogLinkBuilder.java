@@ -46,6 +46,7 @@ public class GraylogLinkBuilder {
       LogExample firstExample = new LogExample();
       firstExample.setBaseUrl(first.getBaseUrl());
       firstExample.setFirstTraceId(first.getTraceId());
+      firstExample.setFirstGraylogId(first.getId());
       firstExample.setFirstTimestamp(first.getTimestamp());
       String firstUrl = calculateAbsoluteUrl(firstExample, TraceType.FIRST);
       html.append("<a href=\"").append(firstUrl).append("\">first</a>");
@@ -58,6 +59,7 @@ public class GraylogLinkBuilder {
       LogOccurrence last = logMessageAccumulator.getLast();
       LogExample lastExample = new LogExample();
       lastExample.setBaseUrl(last.getBaseUrl());
+      lastExample.setFirstGraylogId(last.getId());
       lastExample.setLastTraceId(last.getTraceId());
       lastExample.setLastTimestamp(last.getTimestamp());
       String lastUrl = calculateAbsoluteUrl(lastExample, TraceType.LAST);
@@ -93,9 +95,19 @@ public class GraylogLinkBuilder {
     String to = DateTimeFormatter.ISO_INSTANT.format(instant.plusSeconds(2));
 
     // Encode the query parameters
-    String encodedTraceId = URLEncoder.encode(traceId, StandardCharsets.UTF_8);
-    String query = URLEncoder.encode("trace_id:" + encodedTraceId + " OR traceId:" + encodedTraceId,
-        StandardCharsets.UTF_8);
+    String query;
+    if (traceId != null && !traceId.isEmpty()) {
+      String encodedTraceId = URLEncoder.encode(traceId, StandardCharsets.UTF_8);
+       query = URLEncoder.encode("trace_id:" + encodedTraceId + " OR traceId:" + encodedTraceId,
+          StandardCharsets.UTF_8);
+
+    } else {
+      String id = traceType == TraceType.FIRST ? logExample.getFirstGraylogId() : logExample.getLastGraylogId();
+      String encodedId = URLEncoder.encode(id, StandardCharsets.UTF_8);
+       query = URLEncoder.encode("_id:" + encodedId,
+          StandardCharsets.UTF_8);
+
+    }
 
     // Build the URL
     return String.format(

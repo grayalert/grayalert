@@ -23,7 +23,6 @@ public class BatchProcessor {
     private final ExecutorService pool = Executors.newCachedThreadPool();
     private final MessageProcessor messageProcessor;
     private final LogBucketSplitter logBucketSplitter;
-    private final GraylogLinkBuilder graylogLinkBuilder;
     private final Map<LogBucket, Trie<String, LogMessageAccumulator>> tries = new ConcurrentHashMap<>();
 
     public BatchProcessResult processBuckets(Map<LogBucket, List<LogEntry>> buckets) {
@@ -69,11 +68,9 @@ public class BatchProcessor {
                 String message = firstLogOccurrence.getMessage();
                 example.setMessage(message);
                 String baseUrl = firstLogOccurrence.getBaseUrl();
-                String html = graylogLinkBuilder.getGraylogLink(logMessageAccumulator);
                 LogBucket logBucket = entry.getKey();
                 example.setAppName(logBucket.getAppName());
                 example.setBaseUrl(baseUrl);
-                example.setLinkHtml(html);
                 if (message.length() > MAX_SHORT_MESSAGE_LENGTH) {
                     example.setShortMessage(message.substring(0, MAX_SHORT_MESSAGE_LENGTH) + "...");
                 } else {

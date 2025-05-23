@@ -1,0 +1,4 @@
+_id,timestamp,source,message,trace_id,traceId,logger_name,LoggerName
+1,2024-03-20T10:00:00.000Z,app1,Error in processing request,123,123,com.example.app1,com.example.app1
+2,2024-03-20T12:01:00.000Z,app2,Database connection failed,,456,com.example.app2,com.example.app2
+3,2024-03-20T15:02:00.000Z,app1,Invalid input format,,,com.example.app1,com.example.app1

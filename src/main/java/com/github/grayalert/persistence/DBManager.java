@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DBManager {
 
     private final LogExampleRepository repo;
@@ -18,10 +20,35 @@ public class DBManager {
     private final Clock clock;
 
     @Transactional
-    public List<LogExample> load() {
-        TypedQuery<LogExample> query = entityManager.createQuery("SELECT le FROM LogExample le", LogExample.class);
-        List<LogExample> resultList = query.getResultList();
-        return resultList;
+    public List<LogExample> load(Long maxAge) {
+        if (maxAge == null) {
+            TypedQuery<LogExample> query = entityManager.createQuery(
+                "SELECT le FROM LogExample le order by lastTimestamp desc, firstTimestamp desc", LogExample.class);
+            return query.getResultList();
+        } else {
+            var cb = entityManager.getCriteriaBuilder();
+            var cq = cb.createQuery(LogExample.class);
+            var root = cq.from(LogExample.class);
+
+            long cutoffTime = clock.millis() - (maxAge);
+
+            var lastTimestampGt = cb.greaterThan(root.get("lastTimestamp"), cutoffTime);
+            var lastTimestampNull = cb.isNull(root.get("lastTimestamp"));
+            var firstTimestampGt = cb.greaterThan(root.get("firstTimestamp"), cutoffTime);
+            var orPredicate = cb.or(
+                lastTimestampGt,
+                cb.and(lastTimestampNull, firstTimestampGt)
+            );
+
+            cq.select(root)
+              .where(orPredicate)
+              .orderBy(
+                  cb.desc(root.get("lastTimestamp")),
+                  cb.desc(root.get("firstTimestamp"))
+              );
+
+            return entityManager.createQuery(cq).getResultList();
+        }
     }
 
     @Transactional

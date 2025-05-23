@@ -70,7 +70,7 @@ public class GrayLogFetcher implements LogFetcher {
     Response response;
     try {
       response = client.getLogs(fields, query, timerange);
-      log.info("Received {} characters large response from {}", response.status(), baseUrl);
+      log.info("Received {} characters large response from {}", response.body().length(), baseUrl);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       throw new RuntimeException(e);

@@ -51,7 +51,7 @@ public class Poller {
     public void init() {
         if (!isInitialized.getAndSet(true)) {
             this.minTimestamp = utcClock.getCurrentTimeMillis() - LOAD_PERIOD_SECONDS * 1000;
-            List<LogExample> examples = dbManager.load();
+            List<LogExample> examples = dbManager.load(null);
             log.info("Loaded {} examples from database", examples.size());
             if (!examples.isEmpty()) {
                 // we are only interested in messages that have been logged since

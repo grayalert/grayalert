@@ -18,11 +18,11 @@ public class LogExampleService {
     private final DBManager dbManager;
     private final GraylogLinkBuilder graylogLinkBuilder;
 
-    public List<LogExample> loadAndSetHtmlLinks() {
+    public List<LogExample> loadAndSetHtmlLinks(Long maxAge) {
         // Create baseUrlMappings from GraylogConfiguration
 
         // Load LogExamples and set htmlLink
-        List<LogExample> logExamples = dbManager.load();
+        List<LogExample> logExamples = dbManager.load(maxAge);
         logExamples.forEach(logExample -> {
             String htmlLink = graylogLinkBuilder.getGraylogHtmlLinks(logExample);
             logExample.setLinkHtml(htmlLink);

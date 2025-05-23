@@ -35,8 +35,7 @@ class BatchProcessorTest {
 
     private static BatchProcessor initBatchProcessor() {
         MessageProcessor messageProcessor = new MessageProcessor(new MessageTokeniser());
-        BatchProcessor processor = new BatchProcessor(messageProcessor, new LogBucketSplitter(new AppNameExtractor()), new GraylogLinkBuilder(new GraylogConfiguration(
-            Map.of())));
+        BatchProcessor processor = new BatchProcessor(messageProcessor, new LogBucketSplitter(new AppNameExtractor()));
         return processor;
     }
 }

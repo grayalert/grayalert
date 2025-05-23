@@ -20,7 +20,7 @@ public class RESTController {
 
     @GetMapping("/logs")
     public List<LogExample> getLogs() {
-        return logExampleService.loadAndSetHtmlLinks();
+        return logExampleService.loadAndSetHtmlLinks(null);
     }
 
     @PostMapping("/logs/delete-old")

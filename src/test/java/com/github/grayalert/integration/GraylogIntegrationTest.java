@@ -8,6 +8,9 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import java.net.URLDecoder;
+import java.time.Clock;
+import java.util.OptionalLong;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +32,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
+import wiremock.org.eclipse.jetty.util.component.AbstractLifeCycle;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,6 +54,9 @@ public class GraylogIntegrationTest {
     private Poller poller;
 
     @Autowired
+    Clock clock;
+
+    @Autowired
     private TestRestTemplate restTemplate;
 
     @SpyBean
@@ -67,12 +74,25 @@ public class GraylogIntegrationTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        String csvContent = new String(new ClassPathResource("graylog.csv").getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        String csvContent1 = new String(new ClassPathResource("graylog1.csv").getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        String csvContent2 = new String(new ClassPathResource("graylog2.csv").getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
         wireMockServer.stubFor(get(urlPathMatching("/api/search/universal/relative/export.*"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/csv")
-                        .withBody(csvContent)));
+            .inScenario("Graylog CSVs")
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/csv")
+                .withBody(csvContent1))
+            .willSetStateTo("SECOND_CALL"));
+
+        wireMockServer.stubFor(get(urlPathMatching("/api/search/universal/relative/export.*"))
+            .inScenario("Graylog CSVs")
+            .whenScenarioStateIs("SECOND_CALL")
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "text/csv")
+                .withBody(csvContent2)));
+
         poller.triggerFetch();
     }
 
@@ -89,7 +109,7 @@ public class GraylogIntegrationTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
         // Verify we have 3 records initially
-        List<LogExample> initialRecords = dbManager.load();
+        List<LogExample> initialRecords = dbManager.load(null);
         assertEquals(3, initialRecords.size(), "Should have 3 records initially");
 
         // Call delete-old endpoint with 300 minutes (18000 seconds) threshold
@@ -106,7 +126,7 @@ public class GraylogIntegrationTest {
         assertEquals(2, remainingRecords.size(), "Should have  records after deletion: " + remainingRecords);
 
         // Double check the database state
-        List<LogExample> dbRecords = dbManager.load();
+        List<LogExample> dbRecords = dbManager.load(null);
         assertEquals(2, dbRecords.size(), "Should have 1 record in database after deletion");
     }
 
@@ -117,16 +137,20 @@ public class GraylogIntegrationTest {
 
         ArgumentCaptor<List> rowsSaveCaptor = ArgumentCaptor.forClass(List.class);
         Mockito.verify(dbManager, Mockito.atLeastOnce()).save(rowsSaveCaptor.capture());
-        List<LogExample> htmlLogExamples = fetchRows();
+        List<LogExample> htmlLogExamples = fetchRows(null);
         assertEquals(3, htmlLogExamples.size());
         assertEquals(3, rowsSaveCaptor.getValue().size());
         for (LogExample logExample : htmlLogExamples) {
             String url = logExample.getUrl();
             assertTrue(url.contains("rangetype=absolute"), "linkHtml should contain 'rangetype=absolute'");
-            assertTrue(url.contains("traceId"), "url doesn't contain traceId: " + url);
         }
+        List<String> decodedUrls = htmlLogExamples.stream().map(x -> URLDecoder.decode(x.getUrl()))
+            .toList();
+        assertEquals(1, decodedUrls.stream().filter(p-> p.contains("_id:3")).count());
+        assertEquals(1, decodedUrls.stream().filter(p-> p.contains("trace_id:123")).count());
+        assertEquals(1, decodedUrls.stream().filter(p-> p.contains("trace_id:456")).count());
         poller.triggerFetch();
-        List<LogExample> updatedHtmlLogExamples = fetchRows();
+        List<LogExample> updatedHtmlLogExamples = fetchRows(null);
         assertEquals(3, updatedHtmlLogExamples.size());
         for (LogExample logExample : updatedHtmlLogExamples) {
             assertNotNull(logExample.getLastSeen());
@@ -137,11 +161,24 @@ public class GraylogIntegrationTest {
         Mockito.verify(alarmNotifier).notifyMessage(alarmMessageCaptor.capture());
         String alarmMessage = alarmMessageCaptor.getValue();
         assertTrue(alarmMessage.contains("rangetype=absolute"), "Alarm message should contain 'rangetype=absolute': " + alarmMessage);
+
+        OptionalLong maxTimestamp = updatedHtmlLogExamples.stream()
+            .filter(p -> p.getLastTimestamp() != null).mapToLong(LogExample::getLastTimestamp).max();
+
+        long maxAge = clock.millis() - maxTimestamp.getAsLong() + 60_000;
+        System.out.println("Last timestamp: " + maxTimestamp);
+        List<LogExample> lastRecord = fetchRows(maxAge);
+
+        assertEquals(1, lastRecord.size());
     }
 
-    private List<LogExample> fetchRows() {
+    private List<LogExample> fetchRows(Long maxAge) {
         // Then fetch the main page
-        ResponseEntity<String> response = restTemplate.getForEntity("http://localhost:" + port + "/", String.class);
+        String u = "http://localhost:" + port + "/";
+        if (maxAge != null) {
+            u += "?maxAge=" + maxAge;
+        }
+        ResponseEntity<String> response = restTemplate.getForEntity(u, String.class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         String html = response.getBody();
         List<LogExample> htmlLogExamples = new java.util.ArrayList<>();
@@ -182,7 +219,7 @@ public class GraylogIntegrationTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
         // Verify that we have 3 log examples in the database
-        List<LogExample> logExamples = dbManager.load();
+        List<LogExample> logExamples = dbManager.load(null);
         assertEquals(3, logExamples.size());
     }
 }
