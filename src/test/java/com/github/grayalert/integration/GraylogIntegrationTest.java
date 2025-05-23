@@ -1,8 +1,6 @@
 package com.github.grayalert.integration;
 
-import com.github.grayalert.output.AlarmNotifier;
 import com.github.grayalert.output.LoggingAlarmNotifier;
-import com.github.grayalert.output.MSTeamsNotifier;
 import com.github.grayalert.persistence.DBManager;
 import com.github.grayalert.persistence.LogExample;
 import com.github.grayalert.core.Poller;
@@ -113,7 +111,7 @@ public class GraylogIntegrationTest {
     }
 
     @Test
-    void testHtmlResponse() throws Exception {
+    void testHtmlResponseAndAlarmMessagesContainURL() throws Exception {
         // First run the integration test to populate the database
         testGraylogIntegration();
 
@@ -137,7 +135,8 @@ public class GraylogIntegrationTest {
 
         ArgumentCaptor<String> alarmMessageCaptor = ArgumentCaptor.forClass(String.class);
         Mockito.verify(alarmNotifier).notifyMessage(alarmMessageCaptor.capture());
-        System.out.println(alarmMessageCaptor.getValue());
+        String alarmMessage = alarmMessageCaptor.getValue();
+        assertTrue(alarmMessage.contains("rangetype=absolute"), "Alarm message should contain 'rangetype=absolute': " + alarmMessage);
     }
 
     private List<LogExample> fetchRows() {

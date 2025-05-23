@@ -74,7 +74,6 @@ public class BatchProcessor {
                 example.setAppName(logBucket.getAppName());
                 example.setBaseUrl(baseUrl);
                 example.setLinkHtml(html);
-                example.setUrl(graylogLinkBuilder.calculateUrl(logMessageAccumulator));
                 if (message.length() > MAX_SHORT_MESSAGE_LENGTH) {
                     example.setShortMessage(message.substring(0, MAX_SHORT_MESSAGE_LENGTH) + "...");
                 } else {
